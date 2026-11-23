@@ -168,9 +168,9 @@ const CHARACTERS = {
 };
 
 const BOT_PROFILES = {
-  easy:   { label: 'Лёгкий',  speedMult: 0.72, thinkMin: 0.65, thinkMax: 1.05, skillChance: 0.25, aggroDist: 65,  ultChance: 0.35 },
+  easy:   { label: 'Лёгкий',  speedMult: 0.75, thinkMin: 0.65, thinkMax: 1.05, skillChance: 0.25, aggroDist: 65,  ultChance: 0.35 },
   medium: { label: 'Средний', speedMult: 0.92, thinkMin: 0.35, thinkMax: 0.65, skillChance: 0.55, aggroDist: 75,  ultChance: 0.7  },
-  hard:   { label: 'Сложный', speedMult: 1.12, thinkMin: 0.16, thinkMax: 0.34, skillChance: 0.85, aggroDist: 82,  ultChance: 0.95 }
+  hard:   { label: 'Сложный', speedMult: 1.08, thinkMin: 0.18, thinkMax: 0.36, skillChance: 0.85, aggroDist: 80,  ultChance: 0.95 }
 };
 
 let selectedChar = 'geo';
@@ -409,6 +409,19 @@ function activatePocketDimension(owner) {
   }, 10000);
 }
 
+function spawnGeoChainEffect(fromX, fromY, toX, toY, hit) {
+  effects.push({
+    type: 'geoChain',
+    x1: fromX,
+    y1: fromY - 34,
+    x2: toX,
+    y2: toY - 34,
+    hit,
+    life: 0.35,
+    maxLife: 0.35
+  });
+}
+
 function applyHitToTarget(target, dmg, kx, ky, extra = {}) {
   if (!target || target.hp <= 0) return;
   let finalDmg = dmg;
@@ -461,7 +474,7 @@ function triggerAction(type) {
     me.attackAnim = 0.2;
     if (Math.abs(me.x - enemy.x) < 75 && Math.abs(me.y - enemy.y) < 60) {
       let dmg = (me.char === 'puncher' && me.berserk > 0) ? 30 : 10;
-      sendDamage(dmg, me.facing * (me.berserk > 0 ? 18 : 6), -4);
+      sendDamage(dmg, me.facing * (me.berserk > 0 ? 14 : 5), -3.5);
     }
   }
 
@@ -482,16 +495,16 @@ function triggerAction(type) {
       let card = r < 0.5 ? 1 : (r < 0.85 ? 2 : (r < 0.95 ? 3 : 4));
       payload.card = card;
       const dir = curseRoll > 0.66 ? -me.facing : me.facing;
-      spawnProjectile(me.x, me.y - 20, dir * 9, 'card', card, true);
+      spawnProjectile(me.x, me.y - 20, dir * 8, 'card', card, true);
     } else if (me.char === 'glitch') {
       me.x = Math.max(40, Math.min(W - 40, me.x + me.facing * 140));
-      if (Math.abs(me.x - enemy.x) < 80) sendDamage(15, me.facing * 5, -3);
+      if (Math.abs(me.x - enemy.x) < 80) sendDamage(15, me.facing * 4.5, -2.5);
     } else if (me.char === 'puncher') {
-      me.vx = me.facing * 12;
-      if (Math.abs(me.x - enemy.x) < 85) sendDamage(22, me.facing * 8, -13);
+      me.vx = me.facing * 9;
+      if (Math.abs(me.x - enemy.x) < 85) sendDamage(22, me.facing * 6.5, -11);
     } else if (me.char === 'boombox') {
       const dir = curseRoll > 0.66 ? -me.facing : me.facing;
-      spawnProjectile(me.x, me.y - 20, dir * 8, 'bass', 1, true);
+      spawnProjectile(me.x, me.y - 20, dir * 7.5, 'bass', 1, true);
     }
   }
 
@@ -500,13 +513,22 @@ function triggerAction(type) {
     me.cd2 = cfg.cd2;
 
     if (me.char === 'geo') {
-      if (Math.abs(me.x - enemy.x) < 340 && Math.abs(me.y - enemy.y) < 80) {
-        sendDamage(25, -me.facing * 14, -4, { pullTo: Math.max(40, Math.min(W - 40, me.x + me.facing * 50)) });
+      const distX = Math.abs(me.x - enemy.x);
+      const distY = Math.abs(me.y - enemy.y);
+      if (distX < 340 && distY < 110) {
+        const pullPos = Math.max(40, Math.min(W - 40, me.x + me.facing * 55));
+        payload.chainTarget = { x: enemy.x, y: enemy.y, pullTo: pullPos };
+        spawnGeoChainEffect(me.x, me.y, enemy.x, enemy.y, true);
+        sendDamage(25, -me.facing * 8, -3, { pullTo: pullPos });
+      } else {
+        const missX = Math.max(40, Math.min(W - 40, me.x + me.facing * 260));
+        payload.chainTarget = { x: missX, y: me.y, pullTo: null };
+        spawnGeoChainEffect(me.x, me.y, missX, me.y, false);
       }
     } else if (me.char === 'mafo') {
       me.healTimer = 10;
     } else if (me.char === 'glitch') {
-      spawnProjectile(me.x, me.y - 25, me.facing * 8, 'pixel', 1, true);
+      spawnProjectile(me.x, me.y - 25, me.facing * 7.5, 'pixel', 1, true);
     } else if (me.char === 'puncher') {
       me.block = 2.5;
     } else if (me.char === 'boombox') {
@@ -529,7 +551,7 @@ function triggerAction(type) {
     } else if (me.char === 'puncher') {
       me.berserk = 8;
     } else if (me.char === 'boombox') {
-      sendDamage(35, me.facing * 12, -14, { stun: 1.5 });
+      sendDamage(35, me.facing * 9.5, -12, { stun: 1.5 });
     }
   }
 
@@ -572,7 +594,7 @@ function triggerBotAction(type) {
     enemy.attackAnim = 0.2;
     if (distX < 75 && distY < 60) {
       const dmg = (enemy.char === 'puncher' && enemy.berserk > 0) ? 30 : 10;
-      applyHitToTarget(me, dmg, enemy.facing * (enemy.berserk > 0 ? 18 : 6), -4);
+      applyHitToTarget(me, dmg, enemy.facing * (enemy.berserk > 0 ? 14 : 5), -3.5);
     }
     return;
   }
@@ -593,16 +615,16 @@ function triggerBotAction(type) {
       const r = Math.random();
       const card = r < 0.5 ? 1 : (r < 0.85 ? 2 : (r < 0.95 ? 3 : 4));
       const dir = curseRoll > 0.66 ? -enemy.facing : enemy.facing;
-      spawnProjectile(enemy.x, enemy.y - 20, dir * 9, 'card', card, false);
+      spawnProjectile(enemy.x, enemy.y - 20, dir * 8, 'card', card, false);
     } else if (enemy.char === 'glitch') {
       enemy.x = Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 140));
-      if (Math.abs(enemy.x - me.x) < 80) applyHitToTarget(me, 15, enemy.facing * 5, -3);
+      if (Math.abs(enemy.x - me.x) < 80) applyHitToTarget(me, 15, enemy.facing * 4.5, -2.5);
     } else if (enemy.char === 'puncher') {
-      enemy.vx = enemy.facing * 12;
-      if (distX < 95) applyHitToTarget(me, 22, enemy.facing * 8, -13);
+      enemy.vx = enemy.facing * 9;
+      if (distX < 95) applyHitToTarget(me, 22, enemy.facing * 6.5, -11);
     } else if (enemy.char === 'boombox') {
       const dir = curseRoll > 0.66 ? -enemy.facing : enemy.facing;
-      spawnProjectile(enemy.x, enemy.y - 20, dir * 8, 'bass', 1, false);
+      spawnProjectile(enemy.x, enemy.y - 20, dir * 7.5, 'bass', 1, false);
     }
     return;
   }
@@ -612,15 +634,18 @@ function triggerBotAction(type) {
     enemy.cd2 = cfg.cd2;
 
     if (enemy.char === 'geo') {
-      if (distX < 340 && distY < 80) {
-        applyHitToTarget(me, 25, -enemy.facing * 14, -4, {
-          pullTo: Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 50))
-        });
+      if (distX < 340 && distY < 110) {
+        const pullPos = Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 55));
+        spawnGeoChainEffect(enemy.x, enemy.y, me.x, me.y, true);
+        applyHitToTarget(me, 25, -enemy.facing * 8, -3, { pullTo: pullPos });
+      } else {
+        const missX = Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 260));
+        spawnGeoChainEffect(enemy.x, enemy.y, missX, enemy.y, false);
       }
     } else if (enemy.char === 'mafo') {
       enemy.healTimer = 10;
     } else if (enemy.char === 'glitch') {
-      spawnProjectile(enemy.x, enemy.y - 25, enemy.facing * 8, 'pixel', 1, false);
+      spawnProjectile(enemy.x, enemy.y - 25, enemy.facing * 7.5, 'pixel', 1, false);
     } else if (enemy.char === 'puncher') {
       enemy.block = 2.5;
     } else if (enemy.char === 'boombox') {
@@ -642,7 +667,7 @@ function triggerBotAction(type) {
     } else if (enemy.char === 'puncher') {
       enemy.berserk = 8;
     } else if (enemy.char === 'boombox') {
-      if (distX < 220) applyHitToTarget(me, 35, enemy.facing * 12, -14, { stun: 1.5 });
+      if (distX < 220) applyHitToTarget(me, 35, enemy.facing * 9.5, -12, { stun: 1.5 });
     }
   }
 }
@@ -672,7 +697,7 @@ function updateBotAI(dt) {
     if (botDesiredDir !== 0) enemy.facing = botDesiredDir;
 
     if (enemy.y >= 420 && enemy.vy >= 0 && Math.random() < (botDifficulty === 'hard' ? 0.35 : 0.18)) {
-      enemy.vy = enemy.berserk > 0 ? -17 : -14;
+      enemy.vy = enemy.berserk > 0 ? -16 : -13.5;
     }
 
     if (absDx < prof.aggroDist) {
@@ -691,19 +716,19 @@ function updateBotAI(dt) {
           triggerBotAction('s2');
         } else if (enemy.char === 'puncher' && absDx < 120) {
           triggerBotAction('s2');
-        } else if (absDx < 360) {
+        } else if (absDx < 340) {
           triggerBotAction('s2');
         }
       }
     }
   }
 
-  const speed = (enemy.berserk > 0 ? 420 : 280) * (enemy.slow > 0 ? 0.5 : 1) * prof.speedMult;
+  const moveSpeed = (enemy.berserk > 0 ? 6.2 : 4.2) * (enemy.slow > 0 ? 0.5 : 1) * prof.speedMult;
   if (botDesiredDir !== 0) {
-    enemy.vx = botDesiredDir * speed * dt * 15;
+    enemy.vx = botDesiredDir * moveSpeed;
     enemy.facing = botDesiredDir;
   } else {
-    enemy.vx *= 0.8;
+    enemy.vx *= 0.78;
   }
 
   enemy.vy += 0.65;
@@ -718,10 +743,13 @@ function handleRemoteAction(data) {
     applyHitToTarget(me, data.dmg, data.kx, data.ky, data.extra || {});
   } else if (data.action === 's1') {
     const dir = (data.curse && data.curse > 0.66) ? -data.facing : data.facing;
-    if (enemy.char === 'mafo') spawnProjectile(data.x, data.y - 20, dir * 9, 'card', data.card || 1, false);
-    if (enemy.char === 'boombox') spawnProjectile(data.x, data.y - 20, dir * 8, 'bass', 1, false);
+    if (enemy.char === 'mafo') spawnProjectile(data.x, data.y - 20, dir * 8, 'card', data.card || 1, false);
+    if (enemy.char === 'boombox') spawnProjectile(data.x, data.y - 20, dir * 7.5, 'bass', 1, false);
   } else if (data.action === 's2') {
-    if (enemy.char === 'glitch') spawnProjectile(data.x, data.y - 25, data.facing * 8, 'pixel', 1, false);
+    if (enemy.char === 'geo' && data.chainTarget) {
+      spawnGeoChainEffect(data.x, data.y, data.chainTarget.x, data.chainTarget.y, data.chainTarget.pullTo !== null);
+    }
+    if (enemy.char === 'glitch') spawnProjectile(data.x, data.y - 25, data.facing * 7.5, 'pixel', 1, false);
     if (enemy.char === 'boombox') effects.push({ type: 'speaker', x: data.x, y: 420, life: 5, owner: 'enemy' });
   } else if (data.action === 'ult') {
     if (enemy.char === 'geo') {
@@ -797,20 +825,20 @@ function update(dt) {
   document.getElementById('blur-overlay').style.opacity = me.blur > 0 ? '1' : '0';
 
   if (me.stun <= 0 && me.hp > 0 && enemy.hp > 0) {
-    let speed = (me.berserk > 0 ? 420 : 280) * (me.slow > 0 ? 0.5 : 1);
+    const moveSpeed = (me.berserk > 0 ? 6.2 : 4.2) * (me.slow > 0 ? 0.5 : 1);
     let left = keys['a'] || keys['arrowleft'];
     let right = keys['d'] || keys['arrowright'];
     if (me.invert > 0) [left, right] = [right, left];
 
-    if (left) { me.vx = -speed * dt * 15; me.facing = -1; }
-    else if (right) { me.vx = speed * dt * 15; me.facing = 1; }
-    else { me.vx *= 0.8; }
+    if (left) { me.vx = -moveSpeed; me.facing = -1; }
+    else if (right) { me.vx = moveSpeed; me.facing = 1; }
+    else { me.vx *= 0.78; }
 
     if ((keys['w'] || keys[' '] || keys['arrowup']) && me.y >= 420 && me.vy >= 0) {
-      me.vy = me.berserk > 0 ? -17 : -14;
+      me.vy = me.berserk > 0 ? -16 : -13.5;
     }
   } else {
-    me.vx *= 0.85;
+    me.vx *= 0.82;
   }
 
   me.vy += 0.65;
@@ -831,26 +859,26 @@ function update(dt) {
 
     if (p.isMine && enemy.hp > 0 && Math.abs(p.x - enemy.x) < 35 && Math.abs(p.y - (enemy.y - 30)) < 45) {
       if (p.kind === 'card') {
-        if (p.subType === 1) sendDamage(10, p.vx * 0.5, -2, { slow: 3 });
-        if (p.subType === 2) sendDamage(10, p.vx * 0.5, -2, { blur: 3 });
-        if (p.subType === 3) sendDamage(25, p.vx * 0.8, -4, { slow: 5, blur: 5 });
-        if (p.subType === 4) sendDamage(30, p.vx, -6, { stun: 2.4 });
+        if (p.subType === 1) sendDamage(10, p.vx * 0.45, -2, { slow: 3 });
+        if (p.subType === 2) sendDamage(10, p.vx * 0.45, -2, { blur: 3 });
+        if (p.subType === 3) sendDamage(25, p.vx * 0.7, -3.5, { slow: 5, blur: 5 });
+        if (p.subType === 4) sendDamage(30, p.vx * 0.85, -5, { stun: 2.4 });
       } else if (p.kind === 'bass') {
-        sendDamage(18, p.vx * 1.8, -6);
+        sendDamage(18, p.vx * 1.35, -5);
       } else if (p.kind === 'pixel') {
-        sendDamage(20, p.vx, -5, { invert: 3 });
+        sendDamage(20, p.vx * 0.85, -4, { invert: 3 });
       }
       p.life = 0;
     } else if (!p.isMine && gameMode === 'bot' && me.hp > 0 && Math.abs(p.x - me.x) < 35 && Math.abs(p.y - (me.y - 30)) < 45) {
       if (p.kind === 'card') {
-        if (p.subType === 1) applyHitToTarget(me, 10, p.vx * 0.5, -2, { slow: 3 });
-        if (p.subType === 2) applyHitToTarget(me, 10, p.vx * 0.5, -2, { blur: 3 });
-        if (p.subType === 3) applyHitToTarget(me, 25, p.vx * 0.8, -4, { slow: 5, blur: 5 });
-        if (p.subType === 4) applyHitToTarget(me, 30, p.vx, -6, { stun: 2.4 });
+        if (p.subType === 1) applyHitToTarget(me, 10, p.vx * 0.45, -2, { slow: 3 });
+        if (p.subType === 2) applyHitToTarget(me, 10, p.vx * 0.45, -2, { blur: 3 });
+        if (p.subType === 3) applyHitToTarget(me, 25, p.vx * 0.7, -3.5, { slow: 5, blur: 5 });
+        if (p.subType === 4) applyHitToTarget(me, 30, p.vx * 0.85, -5, { stun: 2.4 });
       } else if (p.kind === 'bass') {
-        applyHitToTarget(me, 18, p.vx * 1.8, -6);
+        applyHitToTarget(me, 18, p.vx * 1.35, -5);
       } else if (p.kind === 'pixel') {
-        applyHitToTarget(me, 20, p.vx, -5, { invert: 3 });
+        applyHitToTarget(me, 20, p.vx * 0.85, -4, { invert: 3 });
       }
       p.life = 0;
     }
@@ -861,9 +889,9 @@ function update(dt) {
     let ef = effects[i];
     ef.life -= dt;
     if (ef.type === 'speaker' && ef.owner === 'enemy' && Math.abs(me.x - ef.x) < 120) {
-      me.vx += (me.x >= ef.x ? 1 : -1) * 1.5;
+      me.vx += (me.x >= ef.x ? 1 : -1) * 1.1;
     } else if (ef.type === 'speaker' && ef.owner === 'me' && gameMode === 'bot' && Math.abs(enemy.x - ef.x) < 120) {
-      enemy.vx += (enemy.x >= ef.x ? 1 : -1) * 1.5;
+      enemy.vx += (enemy.x >= ef.x ? 1 : -1) * 1.1;
     }
     if (ef.life <= 0) effects.splice(i, 1);
   }
@@ -914,6 +942,24 @@ function render() {
     if (ef.type === 'speaker') {
       ctx.fillStyle = '#ffd166';
       ctx.fillRect(ef.x - 15, ef.y - 35, 30, 35);
+    } else if (ef.type === 'geoChain') {
+      const alpha = Math.max(0, ef.life / ef.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = ef.hit ? '#4cc9f0' : '#90e0ef';
+      ctx.lineWidth = ef.hit ? 5 : 3;
+      ctx.setLineDash([10, 6]);
+      ctx.beginPath();
+      ctx.moveTo(ef.x1, ef.y1);
+      ctx.lineTo(ef.x2, ef.y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = ef.hit ? '#4cc9f0' : '#90e0ef';
+      ctx.beginPath();
+      ctx.arc(ef.x2, ef.y2, ef.hit ? 8 : 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   });
 
