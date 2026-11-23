@@ -8,66 +8,118 @@
 <style>
   * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
   body { background: #11131a; color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-  
+
   /* Лобби и выбор персонажа */
-  #lobby { background: #1c202b; padding: 20px; border-radius: 16px; width: 92%; max-width: 720px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); text-align: center; z-index: 10; }
-  h1 { font-size: 24px; margin-bottom: 12px; color: #4cc9f0; letter-spacing: 1px; }
-  .char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 15px 0; }
+  #lobby { background: #1c202b; padding: 20px; border-radius: 16px; width: 92%; max-width: 740px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); text-align: center; z-index: 10; max-height: 96vh; overflow-y: auto; }
+  h1 { font-size: 24px; margin-bottom: 10px; color: #4cc9f0; letter-spacing: 1px; }
+
+  .mode-switch { display: inline-flex; background: #11131a; padding: 4px; border-radius: 10px; border: 1px solid #353b4d; margin: 8px 0 4px; gap: 4px; }
+  .mode-btn { padding: 7px 14px; border-radius: 7px; border: none; background: transparent; color: #aab2c8; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.15s; }
+  .mode-btn.active { background: #4cc9f0; color: #11131a; }
+
+  .bot-options { display: none; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 12px; padding: 12px; background: #262b38; border-radius: 10px; border: 1px solid #353b4d; }
+  .bot-options.visible { display: flex; }
+  .diff-group { display: flex; gap: 6px; }
+  .diff-btn { padding: 6px 12px; border-radius: 7px; border: 1px solid #454d63; background: #181b24; color: #fff; font-size: 12px; font-weight: bold; cursor: pointer; }
+  .diff-btn.active { border-color: #ffd166; background: rgba(255, 209, 102, 0.2); color: #ffd166; }
+
+  select { padding: 7px 10px; border-radius: 7px; border: 1px solid #4cc9f0; background: #11131a; color: #fff; font-size: 13px; cursor: pointer; }
+
+  .char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin: 14px 0; }
   .char-card { background: #262b38; border: 2px solid #353b4d; border-radius: 10px; padding: 10px; cursor: pointer; transition: 0.2s; }
   .char-card.selected { border-color: #4cc9f0; background: #2c364f; transform: translateY(-3px); }
-  .char-card h3 { font-size: 16px; margin-bottom: 4px; }
+  .char-card h3 { font-size: 15px; margin-bottom: 4px; }
   .char-card p { font-size: 11px; color: #aab2c8; }
-  
-  .conn-box { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #353b4d; }
+
+  .conn-box { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid #353b4d; }
   input { padding: 10px 14px; border-radius: 8px; border: 1px solid #4cc9f0; background: #11131a; color: #fff; font-size: 16px; width: 160px; text-align: center; text-transform: uppercase; }
   button.btn { padding: 10px 18px; border-radius: 8px; border: none; background: #4cc9f0; color: #11131a; font-weight: bold; font-size: 15px; cursor: pointer; }
   button.btn:active { transform: scale(0.96); }
+  button.btn.secondary { background: #353b4d; color: #fff; }
   #status { margin-top: 10px; font-size: 14px; color: #ffd166; min-height: 20px; }
 
   /* Игровая арена */
   #game-container { display: none; position: relative; width: 100vw; height: 100vh; }
   canvas { display: block; width: 100%; height: 100%; background: #181b24; }
-  
+
   /* HUD */
-  .hud { position: absolute; top: 12px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; }
+  .hud { position: absolute; top: 12px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 5; }
   .player-stat { width: 42%; max-width: 320px; }
   .bar-bg { width: 100%; height: 16px; background: #2b3040; border-radius: 8px; overflow: hidden; margin-top: 4px; border: 1px solid #444; }
-  .hp-fill { height: 100%; background: #ef476f; transition: width 0.15s; }
+  .hp-fill { height: 100%; background: #ef476f; transition: width 0.12s; }
   .ult-fill { height: 6px; background: #ffd166; width: 0%; margin-top: 3px; border-radius: 4px; }
-  .name-tag { font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+  .name-tag { font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+
+  /* Экран окончания боя */
+  #end-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.78); z-index: 20; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  #end-title { font-size: 40px; font-weight: bold; }
+  .end-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
   /* Мобильное управление */
-  #mobile-controls { display: none; position: absolute; bottom: 18px; left: 18px; right: 18px; justify-content: space-between; pointer-events: none; }
+  #mobile-controls { display: none; position: absolute; bottom: 18px; left: 18px; right: 18px; justify-content: space-between; pointer-events: none; z-index: 6; }
   .touch-group { display: flex; gap: 12px; pointer-events: auto; align-items: flex-end; }
-  .t-btn { width: 58px; height: 58px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); border: 2px solid rgba(255,255,255,0.3); color: #fff; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .t-btn { width: 58px; height: 58px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); border: 2px solid rgba(255,255,255,0.3); color: #fff; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
   .t-btn:active { background: rgba(76, 201, 240, 0.45); }
   .t-btn.ult { border-color: #ffd166; color: #ffd166; width: 64px; height: 64px; }
+  .t-btn.ult.ready { background: rgba(255, 209, 102, 0.28); box-shadow: 0 0 12px rgba(255, 209, 102, 0.5); }
   .t-btn.atk { border-color: #ef476f; background: rgba(239, 71, 111, 0.25); }
-  
-  #blur-overlay { position: absolute; inset: 0; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-  #pc-hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); pointer-events: none; }
+
+  #blur-overlay { position: absolute; inset: 0; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); pointer-events: none; opacity: 0; transition: opacity 0.25s; z-index: 4; }
+  #pc-hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 12px; color: rgba(255,255,255,0.45); pointer-events: none; z-index: 5; }
 </style>
 </head>
 <body>
 
 <div id="lobby">
   <h1>STICKMAN DUEL ONLINE</h1>
-  <p style="font-size: 13px; color: #aab2c8;">Выберите бойца перед созданием или входом в комнату:</p>
-  
+  <p style="font-size: 13px; color: #aab2c8;">Выберите режим, сложность и бойца:</p>
+
+  <div class="mode-switch">
+    <button type="button" class="mode-btn active" id="mode-online" onclick="setGameMode('online')">Онлайн (2 игрока)</button>
+    <button type="button" class="mode-btn" id="mode-bot" onclick="setGameMode('bot')">Против бота</button>
+  </div>
+
+  <div class="bot-options" id="bot-options">
+    <div>
+      <span style="font-size: 12px; color: #aab2c8; margin-right: 6px;">Сложность:</span>
+      <span class="diff-group">
+        <button type="button" class="diff-btn" data-diff="easy" onclick="setBotDifficulty('easy')">Лёгкий</button>
+        <button type="button" class="diff-btn active" data-diff="medium" onclick="setBotDifficulty('medium')">Средний</button>
+        <button type="button" class="diff-btn" data-diff="hard" onclick="setBotDifficulty('hard')">Сложный</button>
+      </span>
+    </div>
+    <div>
+      <label for="bot-char-select" style="font-size: 12px; color: #aab2c8; margin-right: 6px;">Боец бота:</label>
+      <select id="bot-char-select">
+        <option value="random">Случайный</option>
+        <option value="geo">Geo</option>
+        <option value="mafo">Мафо</option>
+        <option value="glitch">Glitch</option>
+        <option value="puncher">Puncher</option>
+        <option value="boombox">Boom Box</option>
+      </select>
+    </div>
+  </div>
+
   <div class="char-grid" id="char-grid"></div>
 
-  <div class="conn-box">
+  <div class="conn-box" id="online-box">
     <button class="btn" onclick="createRoom()">Создать комнату</button>
     <input type="text" id="join-code" placeholder="КОД КОМНАТЫ" maxlength="5">
     <button class="btn" onclick="joinRoom()">Войти</button>
   </div>
+
+  <div class="conn-box" id="bot-box" style="display:none;">
+    <button class="btn" onclick="startBotMatch()">Начать бой с ботом</button>
+  </div>
+
   <div id="status">Выберите персонажа и создайте комнату (или введите код друга)</div>
 </div>
 
 <div id="game-container">
   <canvas id="arena"></canvas>
   <div id="blur-overlay"></div>
-  
+
   <div class="hud">
     <div class="player-stat">
       <div class="name-tag"><span id="p1-name">Вы</span><span id="p1-hp-txt">100/100</span></div>
@@ -96,6 +148,14 @@
       <div class="t-btn atk" id="btn-atk">УДАР</div>
     </div>
   </div>
+
+  <div id="end-overlay">
+    <div id="end-title">ПОБЕДА!</div>
+    <div class="end-actions">
+      <button class="btn" onclick="restartMatch()">Сыграть снова</button>
+      <button class="btn secondary" onclick="backToLobby()">В лобби</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -107,11 +167,22 @@ const CHARACTERS = {
   boombox: { name: 'Boom Box', hp: 95, color: '#ffd166', desc: 'Бумбокс • Бас-волна, колонка, мега-дроп', cd1: 3.5, cd2: 8 }
 };
 
+const BOT_PROFILES = {
+  easy:   { label: 'Лёгкий',  speedMult: 0.72, thinkMin: 0.65, thinkMax: 1.05, skillChance: 0.25, aggroDist: 65,  ultChance: 0.35 },
+  medium: { label: 'Средний', speedMult: 0.92, thinkMin: 0.35, thinkMax: 0.65, skillChance: 0.55, aggroDist: 75,  ultChance: 0.7  },
+  hard:   { label: 'Сложный', speedMult: 1.12, thinkMin: 0.16, thinkMax: 0.34, skillChance: 0.85, aggroDist: 82,  ultChance: 0.95 }
+};
+
 let selectedChar = 'geo';
+let gameMode = 'online'; // 'online' | 'bot'
+let botDifficulty = 'medium';
 let peer = null, conn = null, isHost = false;
 let gameStarted = false;
+let myCharKey = 'geo', enemyCharKey = 'geo';
+let pocketTimeout = null;
+let botAiTimer = 0;
+let botDesiredDir = 0;
 
-// Рендер карточек выбора
 const grid = document.getElementById('char-grid');
 Object.keys(CHARACTERS).forEach(key => {
   const c = CHARACTERS[key];
@@ -126,10 +197,50 @@ Object.keys(CHARACTERS).forEach(key => {
   grid.appendChild(card);
 });
 
-// Определение мобильного устройства
+function setGameMode(mode) {
+  gameMode = mode;
+  document.getElementById('mode-online').classList.toggle('active', mode === 'online');
+  document.getElementById('mode-bot').classList.toggle('active', mode === 'bot');
+  document.getElementById('bot-options').classList.toggle('visible', mode === 'bot');
+  document.getElementById('online-box').style.display = mode === 'online' ? 'flex' : 'none';
+  document.getElementById('bot-box').style.display = mode === 'bot' ? 'flex' : 'none';
+  document.getElementById('status').innerText = mode === 'bot'
+    ? 'Выберите сложность и нажмите «Начать бой с ботом»'
+    : 'Выберите персонажа и создайте комнату (или введите код друга)';
+}
+
+function setBotDifficulty(diff) {
+  botDifficulty = diff;
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.diff === diff);
+  });
+}
+
+function pickBotCharacter() {
+  const sel = document.getElementById('bot-char-select').value;
+  if (sel !== 'random') return sel;
+  const keys = Object.keys(CHARACTERS);
+  return keys[Math.floor(Math.random() * keys.length)];
+}
+
+function startBotMatch() {
+  if (conn) { try { conn.close(); } catch (e) {} conn = null; }
+  isHost = true;
+  const botChar = pickBotCharacter();
+  startGame(selectedChar, botChar);
+}
+
+function backToLobby() {
+  gameStarted = false;
+  if (pocketTimeout) clearTimeout(pocketTimeout);
+  document.getElementById('end-overlay').style.display = 'none';
+  document.getElementById('game-container').style.display = 'none';
+  document.getElementById('mobile-controls').style.display = 'none';
+  document.getElementById('lobby').style.display = 'block';
+}
+
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 900);
 
-// Сетевое подключение (PeerJS)
 function generateCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
@@ -170,16 +281,18 @@ function setupConnection() {
 
   conn.on('data', data => {
     if (data.type === 'init') {
+      gameMode = 'online';
       startGame(selectedChar, data.char);
     } else if (data.type === 'sync') {
       applyRemoteState(data.state);
     } else if (data.type === 'action') {
       handleRemoteAction(data);
+    } else if (data.type === 'restart') {
+      resetMatchState();
     }
   });
 }
 
-// Игровая логика
 const canvas = document.getElementById('arena');
 const ctx = canvas.getContext('2d');
 const W = 960, H = 540;
@@ -188,15 +301,18 @@ canvas.width = W; canvas.height = H;
 let me, enemy;
 let projectiles = [];
 let effects = [];
+let floatingTexts = [];
 let worldState = { pocketDimension: false, dimensionOwner: null };
+let animId = null;
+let lastTime = 0;
 
 function createPlayer(charKey, x, facing) {
   const cfg = CHARACTERS[charKey];
   return {
     char: charKey, name: cfg.name, color: cfg.color,
-    x, y: 380, vx: 0, vy: 0, facing,
+    x, y: 420, vx: 0, vy: 0, facing,
     hp: cfg.hp, maxHp: cfg.hp,
-    cd1: 0, cd2: 0, ultCharge: 0, // 0..15 сек
+    cd1: 0, cd2: 0, ultCharge: 0,
     portal: null,
     stun: 0, slow: 0, blur: 0, invert: 0,
     block: 0, berserk: 0, mafoCurse: 0, healTimer: 0,
@@ -204,7 +320,36 @@ function createPlayer(charKey, x, facing) {
   };
 }
 
+function resetMatchState() {
+  if (pocketTimeout) clearTimeout(pocketTimeout);
+  worldState = { pocketDimension: false, dimensionOwner: null };
+  projectiles = [];
+  effects = [];
+  floatingTexts = [];
+  botAiTimer = 0.25;
+  botDesiredDir = 0;
+  me = createPlayer(myCharKey, isHost ? 200 : 760, isHost ? 1 : -1);
+  enemy = createPlayer(enemyCharKey, isHost ? 760 : 200, isHost ? -1 : 1);
+  document.getElementById('blur-overlay').style.opacity = '0';
+  document.getElementById('end-overlay').style.display = 'none';
+  lastTime = performance.now();
+}
+
+function restartMatch() {
+  if (gameMode === 'bot') {
+    enemyCharKey = pickBotCharacter();
+  }
+  resetMatchState();
+  document.getElementById('p1-name').innerText = me.name + ' (Вы)';
+  document.getElementById('p2-name').innerText = gameMode === 'bot'
+    ? `${enemy.name} [Бот: ${BOT_PROFILES[botDifficulty].label}]`
+    : enemy.name;
+  if (gameMode === 'online' && conn && conn.open) conn.send({ type: 'restart' });
+}
+
 function startGame(myChar, enemyChar) {
+  myCharKey = myChar;
+  enemyCharKey = enemyChar;
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
   if (isMobile) {
@@ -212,18 +357,16 @@ function startGame(myChar, enemyChar) {
     document.getElementById('pc-hint').style.display = 'none';
   }
 
-  me = createPlayer(myChar, isHost ? 200 : 760, isHost ? 1 : -1);
-  enemy = createPlayer(enemyChar, isHost ? 760 : 200, isHost ? -1 : 1);
-
+  resetMatchState();
   document.getElementById('p1-name').innerText = me.name + ' (Вы)';
-  document.getElementById('p2-name').innerText = enemy.name;
+  document.getElementById('p2-name').innerText = gameMode === 'bot'
+    ? `${enemy.name} [Бот: ${BOT_PROFILES[botDifficulty].label}]`
+    : enemy.name;
 
   gameStarted = true;
-  lastTime = performance.now();
-  requestAnimationFrame(gameLoop);
+  if (!animId) animId = requestAnimationFrame(gameLoop);
 }
 
-// Ввод
 const keys = {};
 window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
@@ -234,20 +377,19 @@ window.addEventListener('keydown', e => {
   if (k === 'x') triggerAction('s2');
   if (k === 'c') triggerAction('ult');
 });
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
-// Сенсорные кнопки
 function bindTouch(id, keyName, actionName) {
   const el = document.getElementById(id);
   el.addEventListener('touchstart', e => {
     e.preventDefault();
     if (keyName) keys[keyName] = true;
     if (actionName) triggerAction(actionName);
-  });
+  }, { passive: false });
   el.addEventListener('touchend', e => {
     e.preventDefault();
     if (keyName) keys[keyName] = false;
-  });
+  }, { passive: false });
 }
 bindTouch('btn-left', 'a');
 bindTouch('btn-right', 'd');
@@ -257,17 +399,52 @@ bindTouch('btn-s1', null, 's1');
 bindTouch('btn-s2', null, 's2');
 bindTouch('btn-ult', null, 'ult');
 
-// Применение способностей
-function triggerAction(type) {
-  if (!gameStarted || me.stun > 0 || me.hp <= 0) return;
+function activatePocketDimension(owner) {
+  worldState.pocketDimension = true;
+  worldState.dimensionOwner = owner;
+  if (pocketTimeout) clearTimeout(pocketTimeout);
+  pocketTimeout = setTimeout(() => {
+    worldState.pocketDimension = false;
+    worldState.dimensionOwner = null;
+  }, 10000);
+}
 
-  // Проверка карманного измерения Geo
+function applyHitToTarget(target, dmg, kx, ky, extra = {}) {
+  if (!target || target.hp <= 0) return;
+  let finalDmg = dmg;
+  if (target.block > 0) {
+    finalDmg = Math.round(dmg * 0.2);
+    target.vx = -kx;
+  }
+  target.hp = Math.max(0, target.hp - finalDmg);
+  target.vx += kx;
+  target.vy += ky;
+  if (extra.pullTo !== undefined) target.x = extra.pullTo;
+  if (extra.stun) target.stun = Math.max(target.stun, extra.stun);
+  if (extra.slow) target.slow = Math.max(target.slow, extra.slow);
+  if (extra.blur) target.blur = Math.max(target.blur, extra.blur);
+  if (extra.invert) target.invert = Math.max(target.invert, extra.invert);
+  addFloatingText(target.x, target.y - 60, '-' + finalDmg, '#ef476f');
+}
+
+function sendDamage(dmg, kx, ky, extra = {}) {
+  if (gameMode === 'bot') {
+    applyHitToTarget(enemy, dmg, kx, ky, extra);
+    return;
+  }
+  if (conn && conn.open) {
+    conn.send({ type: 'action', action: 'hit', dmg, kx, ky, extra });
+  }
+}
+
+function triggerAction(type) {
+  if (!gameStarted || me.stun > 0 || me.hp <= 0 || enemy.hp <= 0) return;
+
   if (worldState.pocketDimension && worldState.dimensionOwner !== 'me' && type !== 'attack') {
     addFloatingText(me.x, me.y - 50, 'ЗАБЛОКИРОВАНО!', '#4cc9f0');
     return;
   }
 
-  // Проверка ульты Мафо (33% осечка, 33% без урона, 33% сбой траектории)
   let curseRoll = 0;
   if (me.mafoCurse > 0 && type !== 'attack') {
     curseRoll = Math.random();
@@ -295,24 +472,26 @@ function triggerAction(type) {
     if (me.char === 'geo') {
       if (!me.portal) {
         me.portal = { x: me.x, y: me.y };
-        me.cd1 = 0.5; // короткий откат до телепорта
+        me.cd1 = 0.5;
       } else {
-        me.x = me.portal.x; me.y = me.portal.y;
+        me.x = me.portal.x; me.y = me.portal.y; me.vy = 0;
         me.portal = null;
       }
     } else if (me.char === 'mafo') {
       const r = Math.random();
       let card = r < 0.5 ? 1 : (r < 0.85 ? 2 : (r < 0.95 ? 3 : 4));
       payload.card = card;
-      spawnProjectile(me.x, me.y - 20, me.facing * (curseRoll > 0.66 ? -9 : 9), 'card', card, true);
+      const dir = curseRoll > 0.66 ? -me.facing : me.facing;
+      spawnProjectile(me.x, me.y - 20, dir * 9, 'card', card, true);
     } else if (me.char === 'glitch') {
-      me.x += me.facing * 140;
+      me.x = Math.max(40, Math.min(W - 40, me.x + me.facing * 140));
       if (Math.abs(me.x - enemy.x) < 80) sendDamage(15, me.facing * 5, -3);
     } else if (me.char === 'puncher') {
       me.vx = me.facing * 12;
       if (Math.abs(me.x - enemy.x) < 85) sendDamage(22, me.facing * 8, -13);
     } else if (me.char === 'boombox') {
-      spawnProjectile(me.x, me.y - 20, me.facing * (curseRoll > 0.66 ? -8 : 8), 'bass', 1, true);
+      const dir = curseRoll > 0.66 ? -me.facing : me.facing;
+      spawnProjectile(me.x, me.y - 20, dir * 8, 'bass', 1, true);
     }
   }
 
@@ -322,7 +501,7 @@ function triggerAction(type) {
 
     if (me.char === 'geo') {
       if (Math.abs(me.x - enemy.x) < 340 && Math.abs(me.y - enemy.y) < 80) {
-        sendDamage(25, -me.facing * 14, -4, { pullTo: me.x + me.facing * 50 });
+        sendDamage(25, -me.facing * 14, -4, { pullTo: Math.max(40, Math.min(W - 40, me.x + me.facing * 50)) });
       }
     } else if (me.char === 'mafo') {
       me.healTimer = 10;
@@ -340,13 +519,13 @@ function triggerAction(type) {
     me.ultCharge = 0;
 
     if (me.char === 'geo') {
-      worldState.pocketDimension = true;
-      worldState.dimensionOwner = 'me';
-      setTimeout(() => { worldState.pocketDimension = false; }, 10000);
+      activatePocketDimension('me');
     } else if (me.char === 'mafo') {
       payload.applyEffect = { mafoCurse: 8 };
+      if (gameMode === 'bot') enemy.mafoCurse = Math.max(enemy.mafoCurse, 8);
     } else if (me.char === 'glitch') {
-      payload.applyEffect = { bsod: 7 };
+      payload.applyEffect = { bsod: true };
+      if (gameMode === 'bot') triggerBsodOnTarget(enemy);
     } else if (me.char === 'puncher') {
       me.berserk = 8;
     } else if (me.char === 'boombox') {
@@ -354,49 +533,202 @@ function triggerAction(type) {
     }
   }
 
-  if (conn && conn.open) conn.send(payload);
+  if (gameMode === 'online' && conn && conn.open) conn.send(payload);
 }
 
-function sendDamage(dmg, kx, ky, extra = {}) {
-  if (conn && conn.open) {
-    conn.send({ type: 'action', action: 'hit', dmg, kx, ky, extra });
+function triggerBsodOnTarget(target) {
+  let ticks = 0;
+  const iv = setInterval(() => {
+    if (!gameStarted || !target || target.hp <= 0) { clearInterval(iv); return; }
+    target.x = 120 + Math.random() * (W - 240);
+    target.y = 150 + Math.random() * 200;
+    target.vy = 0;
+    if (++ticks >= 4) clearInterval(iv);
+  }, 1500);
+}
+
+function triggerBotAction(type) {
+  if (!gameStarted || enemy.stun > 0 || enemy.hp <= 0 || me.hp <= 0) return;
+
+  if (worldState.pocketDimension && worldState.dimensionOwner !== 'enemy' && type !== 'attack') {
+    addFloatingText(enemy.x, enemy.y - 50, 'ЗАБЛОКИРОВАНО!', '#4cc9f0');
+    return;
   }
+
+  let curseRoll = 0;
+  if (enemy.mafoCurse > 0 && type !== 'attack') {
+    curseRoll = Math.random();
+    if (curseRoll < 0.33) {
+      addFloatingText(enemy.x, enemy.y - 50, 'ОСЕЧКА!', '#b5179e');
+      return;
+    }
+  }
+
+  const cfg = CHARACTERS[enemy.char];
+  const distX = Math.abs(enemy.x - me.x);
+  const distY = Math.abs(enemy.y - me.y);
+
+  if (type === 'attack') {
+    enemy.attackAnim = 0.2;
+    if (distX < 75 && distY < 60) {
+      const dmg = (enemy.char === 'puncher' && enemy.berserk > 0) ? 30 : 10;
+      applyHitToTarget(me, dmg, enemy.facing * (enemy.berserk > 0 ? 18 : 6), -4);
+    }
+    return;
+  }
+
+  if (type === 's1') {
+    if (enemy.cd1 > 0) return;
+    enemy.cd1 = cfg.cd1;
+
+    if (enemy.char === 'geo') {
+      if (!enemy.portal) {
+        enemy.portal = { x: enemy.x, y: enemy.y };
+        enemy.cd1 = 0.5;
+      } else if (distX > 180) {
+        enemy.x = enemy.portal.x; enemy.y = enemy.portal.y; enemy.vy = 0;
+        enemy.portal = null;
+      }
+    } else if (enemy.char === 'mafo') {
+      const r = Math.random();
+      const card = r < 0.5 ? 1 : (r < 0.85 ? 2 : (r < 0.95 ? 3 : 4));
+      const dir = curseRoll > 0.66 ? -enemy.facing : enemy.facing;
+      spawnProjectile(enemy.x, enemy.y - 20, dir * 9, 'card', card, false);
+    } else if (enemy.char === 'glitch') {
+      enemy.x = Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 140));
+      if (Math.abs(enemy.x - me.x) < 80) applyHitToTarget(me, 15, enemy.facing * 5, -3);
+    } else if (enemy.char === 'puncher') {
+      enemy.vx = enemy.facing * 12;
+      if (distX < 95) applyHitToTarget(me, 22, enemy.facing * 8, -13);
+    } else if (enemy.char === 'boombox') {
+      const dir = curseRoll > 0.66 ? -enemy.facing : enemy.facing;
+      spawnProjectile(enemy.x, enemy.y - 20, dir * 8, 'bass', 1, false);
+    }
+    return;
+  }
+
+  if (type === 's2') {
+    if (enemy.cd2 > 0) return;
+    enemy.cd2 = cfg.cd2;
+
+    if (enemy.char === 'geo') {
+      if (distX < 340 && distY < 80) {
+        applyHitToTarget(me, 25, -enemy.facing * 14, -4, {
+          pullTo: Math.max(40, Math.min(W - 40, enemy.x + enemy.facing * 50))
+        });
+      }
+    } else if (enemy.char === 'mafo') {
+      enemy.healTimer = 10;
+    } else if (enemy.char === 'glitch') {
+      spawnProjectile(enemy.x, enemy.y - 25, enemy.facing * 8, 'pixel', 1, false);
+    } else if (enemy.char === 'puncher') {
+      enemy.block = 2.5;
+    } else if (enemy.char === 'boombox') {
+      effects.push({ type: 'speaker', x: enemy.x, y: 420, life: 5, owner: 'enemy' });
+    }
+    return;
+  }
+
+  if (type === 'ult') {
+    if (enemy.ultCharge < 15) return;
+    enemy.ultCharge = 0;
+
+    if (enemy.char === 'geo') {
+      activatePocketDimension('enemy');
+    } else if (enemy.char === 'mafo') {
+      me.mafoCurse = Math.max(me.mafoCurse, 8);
+    } else if (enemy.char === 'glitch') {
+      triggerBsodOnTarget(me);
+    } else if (enemy.char === 'puncher') {
+      enemy.berserk = 8;
+    } else if (enemy.char === 'boombox') {
+      if (distX < 220) applyHitToTarget(me, 35, enemy.facing * 12, -14, { stun: 1.5 });
+    }
+  }
+}
+
+function updateBotAI(dt) {
+  if (gameMode !== 'bot' || !enemy || !me || enemy.stun > 0 || enemy.hp <= 0 || me.hp <= 0) {
+    botDesiredDir = 0;
+    return;
+  }
+
+  const prof = BOT_PROFILES[botDifficulty];
+  const dx = me.x - enemy.x;
+  const absDx = Math.abs(dx);
+
+  botAiTimer -= dt;
+  if (botAiTimer <= 0) {
+    botAiTimer = prof.thinkMin + Math.random() * (prof.thinkMax - prof.thinkMin);
+
+    if (absDx > prof.aggroDist) {
+      botDesiredDir = dx > 0 ? 1 : -1;
+    } else if (absDx < 36 && botDifficulty !== 'easy') {
+      botDesiredDir = dx > 0 ? -1 : 1;
+    } else {
+      botDesiredDir = dx > 0 ? 1 : -1;
+    }
+
+    if (botDesiredDir !== 0) enemy.facing = botDesiredDir;
+
+    if (enemy.y >= 420 && enemy.vy >= 0 && Math.random() < (botDifficulty === 'hard' ? 0.35 : 0.18)) {
+      enemy.vy = enemy.berserk > 0 ? -17 : -14;
+    }
+
+    if (absDx < prof.aggroDist) {
+      if (Math.random() < (botDifficulty === 'easy' ? 0.45 : 0.8)) {
+        triggerBotAction('attack');
+      }
+    }
+
+    if (enemy.ultCharge >= 15 && Math.random() < prof.ultChance) {
+      triggerBotAction('ult');
+    } else if (Math.random() < prof.skillChance) {
+      if (enemy.cd1 <= 0 && (enemy.char === 'puncher' || enemy.char === 'glitch' ? absDx < 170 : absDx < 450)) {
+        triggerBotAction('s1');
+      } else if (enemy.cd2 <= 0) {
+        if (enemy.char === 'mafo' && enemy.hp < enemy.maxHp * 0.65) {
+          triggerBotAction('s2');
+        } else if (enemy.char === 'puncher' && absDx < 120) {
+          triggerBotAction('s2');
+        } else if (absDx < 360) {
+          triggerBotAction('s2');
+        }
+      }
+    }
+  }
+
+  const speed = (enemy.berserk > 0 ? 420 : 280) * (enemy.slow > 0 ? 0.5 : 1) * prof.speedMult;
+  if (botDesiredDir !== 0) {
+    enemy.vx = botDesiredDir * speed * dt * 15;
+    enemy.facing = botDesiredDir;
+  } else {
+    enemy.vx *= 0.8;
+  }
+
+  enemy.vy += 0.65;
+  enemy.x += enemy.vx;
+  enemy.y += enemy.vy;
+  if (enemy.y >= 420) { enemy.y = 420; enemy.vy = 0; }
+  enemy.x = Math.max(40, Math.min(W - 40, enemy.x));
 }
 
 function handleRemoteAction(data) {
   if (data.action === 'hit') {
-    let dmg = data.dmg;
-    if (me.block > 0) { dmg = Math.round(dmg * 0.2); me.vx = -data.kx; }
-    me.hp = Math.max(0, me.hp - dmg);
-    me.vx += data.kx;
-    me.vy += data.ky;
-    if (data.extra.pullTo) me.x = data.extra.pullTo;
-    if (data.extra.stun) me.stun = data.extra.stun;
-    if (data.extra.slow) me.slow = data.extra.slow;
-    if (data.extra.blur) me.blur = data.extra.blur;
-    if (data.extra.invert) me.invert = data.extra.invert;
-    addFloatingText(me.x, me.y - 60, '-' + dmg, '#ef476f');
+    applyHitToTarget(me, data.dmg, data.kx, data.ky, data.extra || {});
   } else if (data.action === 's1') {
-    if (enemy.char === 'mafo') spawnProjectile(data.x, data.y - 20, data.facing * 9, 'card', data.card, false);
-    if (enemy.char === 'boombox') spawnProjectile(data.x, data.y - 20, data.facing * 8, 'bass', 1, false);
+    const dir = (data.curse && data.curse > 0.66) ? -data.facing : data.facing;
+    if (enemy.char === 'mafo') spawnProjectile(data.x, data.y - 20, dir * 9, 'card', data.card || 1, false);
+    if (enemy.char === 'boombox') spawnProjectile(data.x, data.y - 20, dir * 8, 'bass', 1, false);
   } else if (data.action === 's2') {
     if (enemy.char === 'glitch') spawnProjectile(data.x, data.y - 25, data.facing * 8, 'pixel', 1, false);
     if (enemy.char === 'boombox') effects.push({ type: 'speaker', x: data.x, y: 420, life: 5, owner: 'enemy' });
   } else if (data.action === 'ult') {
     if (enemy.char === 'geo') {
-      worldState.pocketDimension = true;
-      worldState.dimensionOwner = 'enemy';
-      setTimeout(() => { worldState.pocketDimension = false; }, 10000);
+      activatePocketDimension('enemy');
     }
-    if (data.applyEffect?.mafoCurse) me.mafoCurse = data.applyEffect.mafoCurse;
-    if (data.applyEffect?.bsod) {
-      let ticks = 0;
-      const iv = setInterval(() => {
-        me.x = 120 + Math.random() * (W - 240);
-        me.y = 150 + Math.random() * 200;
-        if (++ticks >= 4) clearInterval(iv);
-      }, 1500);
-    }
+    if (data.applyEffect?.mafoCurse) me.mafoCurse = Math.max(me.mafoCurse, data.applyEffect.mafoCurse);
+    if (data.applyEffect?.bsod) triggerBsodOnTarget(me);
   }
 }
 
@@ -404,13 +736,10 @@ function spawnProjectile(x, y, vx, kind, subType, isMine) {
   projectiles.push({ x, y, vx, kind, subType, isMine, life: 2.5 });
 }
 
-let floatingTexts = [];
 function addFloatingText(x, y, text, color) {
   floatingTexts.push({ x, y, text, color, life: 1.0 });
 }
 
-// Основной цикл
-let lastTime = 0;
 function gameLoop(now) {
   const dt = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
@@ -418,16 +747,17 @@ function gameLoop(now) {
   update(dt);
   render();
 
-  if (conn && conn.open) {
+  if (gameMode === 'online' && conn && conn.open && me) {
     conn.send({
       type: 'sync',
       state: { x: me.x, y: me.y, facing: me.facing, hp: me.hp, ult: me.ultCharge, portal: me.portal, block: me.block, berserk: me.berserk, atk: me.attackAnim }
     });
   }
-  requestAnimationFrame(gameLoop);
+  animId = requestAnimationFrame(gameLoop);
 }
 
 function applyRemoteState(s) {
+  if (!enemy || gameMode === 'bot') return;
   enemy.x = s.x; enemy.y = s.y; enemy.facing = s.facing;
   enemy.hp = s.hp; enemy.ultCharge = s.ult;
   enemy.portal = s.portal; enemy.block = s.block; enemy.berserk = s.berserk;
@@ -435,31 +765,38 @@ function applyRemoteState(s) {
 }
 
 function update(dt) {
-  // Таймеры способностей и ульты (ровно 15 сек без ускорения)
+  if (!me || !enemy) return;
+
   me.cd1 = Math.max(0, me.cd1 - dt);
   me.cd2 = Math.max(0, me.cd2 - dt);
-  me.ultCharge = Math.min(15, me.ultCharge + dt);
+  enemy.cd1 = Math.max(0, enemy.cd1 - dt);
+  enemy.cd2 = Math.max(0, enemy.cd2 - dt);
 
-  me.stun = Math.max(0, me.stun - dt);
-  me.slow = Math.max(0, me.slow - dt);
-  me.blur = Math.max(0, me.blur - dt);
-  me.invert = Math.max(0, me.invert - dt);
-  me.block = Math.max(0, me.block - dt);
-  me.berserk = Math.max(0, me.berserk - dt);
-  me.mafoCurse = Math.max(0, me.mafoCurse - dt);
-  me.attackAnim = Math.max(0, me.attackAnim - dt);
-
-  // Лечение Мафо
-  if (me.healTimer > 0) {
-    me.healTimer -= dt;
-    me.hp = Math.min(me.maxHp, me.hp + 2 * dt);
+  if (me.hp > 0 && enemy.hp > 0) {
+    me.ultCharge = Math.min(15, me.ultCharge + dt);
+    if (gameMode === 'bot') {
+      enemy.ultCharge = Math.min(15, enemy.ultCharge + dt);
+    }
   }
 
-  // Эффект помутнения экрана от карт Мафо
+  [me, enemy].forEach(p => {
+    p.stun = Math.max(0, p.stun - dt);
+    p.slow = Math.max(0, p.slow - dt);
+    p.blur = Math.max(0, p.blur - dt);
+    p.invert = Math.max(0, p.invert - dt);
+    p.block = Math.max(0, p.block - dt);
+    p.berserk = Math.max(0, p.berserk - dt);
+    p.mafoCurse = Math.max(0, p.mafoCurse - dt);
+    p.attackAnim = Math.max(0, p.attackAnim - dt);
+    if (p.healTimer > 0 && p.hp > 0) {
+      p.healTimer -= dt;
+      p.hp = Math.min(p.maxHp, p.hp + 2 * dt);
+    }
+  });
+
   document.getElementById('blur-overlay').style.opacity = me.blur > 0 ? '1' : '0';
 
-  // Движение игрока
-  if (me.stun <= 0 && me.hp > 0) {
+  if (me.stun <= 0 && me.hp > 0 && enemy.hp > 0) {
     let speed = (me.berserk > 0 ? 420 : 280) * (me.slow > 0 ? 0.5 : 1);
     let left = keys['a'] || keys['arrowleft'];
     let right = keys['d'] || keys['arrowright'];
@@ -469,12 +806,13 @@ function update(dt) {
     else if (right) { me.vx = speed * dt * 15; me.facing = 1; }
     else { me.vx *= 0.8; }
 
-    if ((keys['w'] || keys[' '] || keys['arrowup']) && me.y >= 420) {
+    if ((keys['w'] || keys[' '] || keys['arrowup']) && me.y >= 420 && me.vy >= 0) {
       me.vy = me.berserk > 0 ? -17 : -14;
     }
+  } else {
+    me.vx *= 0.85;
   }
 
-  // Физика и гравитация
   me.vy += 0.65;
   me.x += me.vx;
   me.y += me.vy;
@@ -482,13 +820,16 @@ function update(dt) {
   if (me.y >= 420) { me.y = 420; me.vy = 0; }
   me.x = Math.max(40, Math.min(W - 40, me.x));
 
-  // Снаряды
+  if (gameMode === 'bot') {
+    updateBotAI(dt);
+  }
+
   for (let i = projectiles.length - 1; i >= 0; i--) {
     let p = projectiles[i];
     p.x += p.vx;
     p.life -= dt;
 
-    if (p.isMine && Math.abs(p.x - enemy.x) < 35 && Math.abs(p.y - (enemy.y - 30)) < 45) {
+    if (p.isMine && enemy.hp > 0 && Math.abs(p.x - enemy.x) < 35 && Math.abs(p.y - (enemy.y - 30)) < 45) {
       if (p.kind === 'card') {
         if (p.subType === 1) sendDamage(10, p.vx * 0.5, -2, { slow: 3 });
         if (p.subType === 2) sendDamage(10, p.vx * 0.5, -2, { blur: 3 });
@@ -500,21 +841,33 @@ function update(dt) {
         sendDamage(20, p.vx, -5, { invert: 3 });
       }
       p.life = 0;
+    } else if (!p.isMine && gameMode === 'bot' && me.hp > 0 && Math.abs(p.x - me.x) < 35 && Math.abs(p.y - (me.y - 30)) < 45) {
+      if (p.kind === 'card') {
+        if (p.subType === 1) applyHitToTarget(me, 10, p.vx * 0.5, -2, { slow: 3 });
+        if (p.subType === 2) applyHitToTarget(me, 10, p.vx * 0.5, -2, { blur: 3 });
+        if (p.subType === 3) applyHitToTarget(me, 25, p.vx * 0.8, -4, { slow: 5, blur: 5 });
+        if (p.subType === 4) applyHitToTarget(me, 30, p.vx, -6, { stun: 2.4 });
+      } else if (p.kind === 'bass') {
+        applyHitToTarget(me, 18, p.vx * 1.8, -6);
+      } else if (p.kind === 'pixel') {
+        applyHitToTarget(me, 20, p.vx, -5, { invert: 3 });
+      }
+      p.life = 0;
     }
     if (p.life <= 0) projectiles.splice(i, 1);
   }
 
-  // Колонки Boom Box Guy
   for (let i = effects.length - 1; i >= 0; i--) {
     let ef = effects[i];
     ef.life -= dt;
     if (ef.type === 'speaker' && ef.owner === 'enemy' && Math.abs(me.x - ef.x) < 120) {
-      me.vx += (me.x > ef.x ? 1 : -1) * 1.5;
+      me.vx += (me.x >= ef.x ? 1 : -1) * 1.5;
+    } else if (ef.type === 'speaker' && ef.owner === 'me' && gameMode === 'bot' && Math.abs(enemy.x - ef.x) < 120) {
+      enemy.vx += (enemy.x >= ef.x ? 1 : -1) * 1.5;
     }
     if (ef.life <= 0) effects.splice(i, 1);
   }
 
-  // Обновление HUD
   document.getElementById('p1-hp').style.width = (me.hp / me.maxHp * 100) + '%';
   document.getElementById('p1-hp-txt').innerText = `${Math.ceil(me.hp)}/${me.maxHp}`;
   document.getElementById('p1-ult').style.width = (me.ultCharge / 15 * 100) + '%';
@@ -522,26 +875,41 @@ function update(dt) {
   document.getElementById('p2-hp').style.width = (enemy.hp / enemy.maxHp * 100) + '%';
   document.getElementById('p2-hp-txt').innerText = `${Math.ceil(enemy.hp)}/${enemy.maxHp}`;
   document.getElementById('p2-ult').style.width = (enemy.ultCharge / 15 * 100) + '%';
+
+  if (isMobile) {
+    const b1 = document.getElementById('btn-s1');
+    const b2 = document.getElementById('btn-s2');
+    const bu = document.getElementById('btn-ult');
+    b1.innerText = me.cd1 > 0 ? me.cd1.toFixed(1) : 'СКЛ 1';
+    b2.innerText = me.cd2 > 0 ? me.cd2.toFixed(1) : 'СКЛ 2';
+    bu.innerText = me.ultCharge >= 15 ? 'УЛЬТА!' : `${Math.floor(15 - me.ultCharge)}с`;
+    bu.classList.toggle('ready', me.ultCharge >= 15);
+  }
+
+  const endOverlay = document.getElementById('end-overlay');
+  if ((me.hp <= 0 || enemy.hp <= 0) && endOverlay.style.display !== 'flex') {
+    document.getElementById('end-title').innerText = me.hp > 0 ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ!';
+    document.getElementById('end-title').style.color = me.hp > 0 ? '#06d6a0' : '#ef476f';
+    endOverlay.style.display = 'flex';
+  }
 }
 
-// Отрисовка
 function render() {
+  if (!me || !enemy) return;
+
   ctx.fillStyle = worldState.pocketDimension ? '#0b132b' : '#181b24';
   ctx.fillRect(0, 0, W, H);
 
-  // Пол арены
   ctx.fillStyle = worldState.pocketDimension ? '#1c2541' : '#2b3040';
   ctx.fillRect(0, 420, W, H - 420);
 
-  // Порталы Geo
   [me, enemy].forEach(p => {
-    if (p.portal) {
+    if (p && p.portal) {
       ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.ellipse(p.portal.x, p.portal.y - 30, 14, 32, 0, 0, Math.PI * 2); ctx.stroke();
     }
   });
 
-  // Колонки
   effects.forEach(ef => {
     if (ef.type === 'speaker') {
       ctx.fillStyle = '#ffd166';
@@ -549,32 +917,20 @@ function render() {
     }
   });
 
-  // Стикмены
   drawStickman(me);
   drawStickman(enemy);
 
-  // Снаряды
   projectiles.forEach(p => {
     ctx.fillStyle = p.kind === 'card' ? '#f72585' : (p.kind === 'bass' ? '#ffd166' : '#06d6a0');
     ctx.fillRect(p.x - 10, p.y - 6, 20, 12);
   });
 
-  // Всплывающий текст урона
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     let ft = floatingTexts[i];
     ft.y -= 0.8; ft.life -= 0.02;
     ctx.fillStyle = ft.color; ctx.font = 'bold 16px sans-serif';
     ctx.fillText(ft.text, ft.x - 20, ft.y);
     if (ft.life <= 0) floatingTexts.splice(i, 1);
-  }
-
-  // Экран победы/поражения
-  if (me.hp <= 0 || enemy.hp <= 0) {
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 42px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(me.hp > 0 ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ!', W / 2, H / 2);
-    ctx.textAlign = 'left';
   }
 }
 
@@ -584,37 +940,27 @@ function drawStickman(p) {
   ctx.strokeStyle = p.berserk > 0 ? '#ff0055' : p.color;
   ctx.lineWidth = 4;
 
-  // Голова
   ctx.beginPath(); ctx.arc(0, -55, 11, 0, Math.PI * 2); ctx.stroke();
-  // Тело
   ctx.beginPath(); ctx.moveTo(0, -44); ctx.lineTo(0, -18); ctx.stroke();
-  // Ноги
   ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-10, 0); ctx.moveTo(0, -18); ctx.lineTo(10, 0); ctx.stroke();
-  // Руки
   let reach = p.attackAnim > 0 ? 28 : 14;
   ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(p.facing * reach, -32); ctx.stroke();
 
-  // Уникальные аксессуары
   if (p.char === 'geo') {
-    // Шарф
     ctx.strokeStyle = '#00b4d8'; ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(-6, -43); ctx.lineTo(-p.facing * 22, -35); ctx.stroke();
   } else if (p.char === 'mafo') {
-    // Цилиндр
     ctx.fillStyle = '#000';
     ctx.fillRect(-12, -68, 24, 4);
     ctx.fillRect(-8, -82, 16, 14);
   } else if (p.char === 'puncher') {
-    // Красные перчатки
     ctx.fillStyle = '#ef476f';
     ctx.beginPath(); ctx.arc(p.facing * reach, -32, 7, 0, Math.PI * 2); ctx.fill();
   } else if (p.char === 'boombox') {
-    // Бумбокс на плече
     ctx.fillStyle = '#ffd166';
     ctx.fillRect(-p.facing * 18 - 10, -52, 22, 14);
   }
 
-  // Щит блока
   if (p.block > 0) {
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, -32, 34, 0, Math.PI * 2); ctx.stroke();
